@@ -1,12 +1,15 @@
 // Éléments du DOM
 const countriesContainer = document.getElementById('countriesContainer');
 const searchInput = document.getElementById('searchInput');
-const filters = document.getElementById('filters');
 const apiUrl= "https://restcountries.com/v3.1/all";
 const main = document.querySelector("main");
-
-
-
+const countryCount = document.getElementById('countryCount');
+const btnAz = document.querySelector("#sortNameAsc");
+const btnZa = document.querySelector("#sortNameDesc");
+const btnNoteAsc = document.querySelector("#sortPopAsc");
+const btnNoteDesc = document.querySelector("#sortPopDesc");
+const regionFilter = document.querySelector("#regionFilter");
+var sortMethod = "";
 //...
 
 
@@ -15,6 +18,8 @@ const main = document.querySelector("main");
 var allCountries = []
 //displayLimit  Nombre de pays à afficher initialement
 var displayLimit = 12
+var filter="";
+var selectValue="";
 // Fonction pour récupérer les données de l'API
 async function fetchCountries() {
     
@@ -43,6 +48,9 @@ async function fetchCountries() {
         // ÉTAPE 5: Appelez la fonction pour afficher les pays (on oublie les parenthèses)
         // ...
         displayCountries()
+   
+         
+
     } catch (error) {
         // Gérez les erreurs potentielles
         console.error('Erreur:', error);
@@ -63,9 +71,27 @@ function displayCountries() {
     // ...
     countriesContainer.innerHTML = ""
     var copy = [...allCountries];
+    
+ if (filter != "")
+    copy=copy.filter((country) => {       
+          return country.name.common.toLowerCase().includes(filter.toLowerCase());
+      })
+
+      if (selectValue != "")
+        copy=copy.filter((country)=>country.region===selectValue)
+
+
+
+    copy=copy.sort((a, b) => {
+        if (sortMethod == "az") return a.name.common.localeCompare(b.name.common);
+        else if (sortMethod == "za") return b.name.common.localeCompare(a.name.common);
+        else if (sortMethod == "noteAsc") return a.population - b.population;
+        else if (sortMethod == "noteDesc") return b.population - a.population;
+      })     
+
     // ÉTAPE 2: Limitez le nombre de pays à afficher avec slice
     // let limitedCountries =...
-    
+    copy=copy.slice(0,displayLimit)
     // ÉTAPE 3: Pour chaque (foreach) pays dans limitedCountries, créez une carte
     //...
     copy.forEach(country=> {
@@ -73,21 +99,8 @@ function displayCountries() {
         const name = country.name.common;
         const capital = country.capital;
         const population = formatNumber(country.population);
-        const region = country.region;
-
-            
-        main.innerHTML += `   <div class="country-card">
-        <div class="flag-container">
-          <img src="${flag}" alt="Drapeau de France" />
-        </div>
-        <div class="country-info">
-          <h2>${name}</h2>
-          <p><strong>Capitale:</strong> ${capital}</p>
-          <p><strong>Population:</strong> ${population} millions</p>
-          <p><strong>Région:</strong> ${region}</p>
-        </div>
-      </div>`;
-      });
+        const region = country.region; 
+  
     
         
         // ÉTAPE 4: Ajoutez le HTML interne de la carte avec les informations du pays
@@ -97,15 +110,24 @@ function displayCountries() {
         // - country.capital[0] pour la capitale (attention, vérifiez si elle existe)
         // - country.population pour la population (utilisez formatNumber)
         // - country.region pour la région/continent
-        const countryCard = `
-        
-        `;
-        
+      
         // ÉTAPE 5: Ajoutez la carte countryCard au innerhtml du conteneur
         // ...
        
         // ÉTAPE 6 : Fin du foreach
         // ...
+        main.innerHTML += `   <div class="country-card">
+        <div class="flag-container">
+          <img src="${flag}" alt="Drapeau de France" />
+        </div>
+        <div class="country-info">
+          <h2>${name}</h2>
+          <p><strong>Capitale:</strong> ${capital}</p>
+          <p><strong>Population:</strong> ${population} habitants</p>
+          <p><strong>Région:</strong> ${region}</p>
+        </div>
+      </div>`;
+      });
     }
 
 
@@ -113,10 +135,42 @@ function displayCountries() {
 // addEventListener
     // Mettez à jour la valeur affichée
     // ...
-    
+    countryCount.addEventListener("input", (e) => {
+        countValue.innerHTML = e.target.value;
+        displayLimit = e.target.value;
+        displayCountries();
+      });   
     // Réaffichez les pays avec la nouvelle limite
     //...
 
 
 // ÉTAPE 8: Appelez la fonction pour récupérer les pays lorsque la page est chargée
 // ...
+btnAz.addEventListener("click", () => {
+    sortMethod = "az";
+    displayCountries();
+  });
+  
+  btnZa.addEventListener("click", () => {
+    sortMethod = "za";
+    displayCountries();
+  });
+  btnNoteAsc.addEventListener("click", () => {
+    sortMethod = "noteAsc";
+    displayCountries();
+  });
+  
+  btnNoteDesc.addEventListener("click", () => {
+    sortMethod = "noteDesc";
+    displayCountries();
+  });
+
+  searchInput.addEventListener("input", (e) => {
+    filter = e.target.value;
+    displayCountries();
+  });
+
+  regionFilter.addEventListener("change",(e) => {
+    selectValue = e.target.value;
+    displayCountries();
+  });
