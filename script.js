@@ -75,7 +75,6 @@ function displayCountries() {
         const population = formatNumber(country.population);
         const region = country.region;
 
-        let img_url = "flag";
             
         main.innerHTML += `   <div class="country-card">
         <div class="flag-container">
