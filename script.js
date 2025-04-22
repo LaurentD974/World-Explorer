@@ -66,69 +66,69 @@ function formatNumber(num) {
 
 // Fonction pour afficher les pays
 function displayCountries() {
-    
-    // ÉTAPE 1: Videz le conteneur countriesContainer avant d'ajouter de nouveaux pays
-    // ...
-    countriesContainer.innerHTML = ""
-    var copy = [...allCountries];
-    
- if (filter != "")
-    copy=copy.filter((country) => {       
-          return country.name.common.toLowerCase().includes(filter.toLowerCase());
-      })
+  countriesContainer.innerHTML = ""; // Videz le conteneur
+  var copy = [...allCountries];
 
-      if (selectValue != "")
-        copy=copy.filter((country)=>country.region===selectValue)
-
-
-
-    copy=copy.sort((a, b) => {
-        if (sortMethod == "az") return a.name.common.localeCompare(b.name.common);
-        else if (sortMethod == "za") return b.name.common.localeCompare(a.name.common);
-        else if (sortMethod == "noteAsc") return a.population - b.population;
-        else if (sortMethod == "noteDesc") return b.population - a.population;
-      })     
-
-    // ÉTAPE 2: Limitez le nombre de pays à afficher avec slice
-    // let limitedCountries =...
-    copy=copy.slice(0,displayLimit)
-    // ÉTAPE 3: Pour chaque (foreach) pays dans limitedCountries, créez une carte
-    //...
-    copy.forEach(country=> {
-        const flag = country.flags.png;
-        const name = country.name.common;
-        const capital = country.capital;
-        const population = formatNumber(country.population);
-        const region = country.region; 
-  
-    
-        
-        // ÉTAPE 4: Ajoutez le HTML interne de la carte avec les informations du pays
-        // Utilisez les propriétés de l'objet country:
-        // - country.flags.png pour l'URL du drapeau
-        // - country.name.common pour le nom du pays
-        // - country.capital[0] pour la capitale (attention, vérifiez si elle existe)
-        // - country.population pour la population (utilisez formatNumber)
-        // - country.region pour la région/continent
-      
-        // ÉTAPE 5: Ajoutez la carte countryCard au innerhtml du conteneur
-        // ...
-       
-        // ÉTAPE 6 : Fin du foreach
-        // ...
-        main.innerHTML += `   <div class="country-card">
-        <div class="flag-container">
-          <img src="${flag}" alt="Drapeau de France" />
-        </div>
-        <div class="country-info">
-          <h2>${name}</h2>
-          <p><strong>Capitale:</strong> ${capital}</p>
-          <p><strong>Population:</strong> ${population} habitants</p>
-          <p><strong>Région:</strong> ${region}</p>
-        </div>
-      </div>`;
+  // Application des filtres et tri
+  if (filter != "")
+      copy = copy.filter((country) => {
+          return country.translations.fra.common.toLowerCase().includes(filter.toLowerCase());
       });
-    }
+
+  if (selectValue != "")
+      copy = copy.filter((country) => country.region === selectValue);
+
+  copy = copy.sort((a, b) => {
+      if (sortMethod == "az") return a.name.common.localeCompare(b.name.common);
+      else if (sortMethod == "za") return b.name.common.localeCompare(a.name.common);
+      else if (sortMethod == "noteAsc") return a.population - b.population;
+      else if (sortMethod == "noteDesc") return b.population - a.population;
+  });
+
+  copy = copy.slice(0, displayLimit); // Limitez les pays affichés
+
+  copy.forEach((country) => {
+      const flag = country.flags.png;
+      const name = country.translations.fra.common;
+      const capital = country.capital ? country.capital[0] : "N/A";
+      const population = formatNumber(country.population);
+      const region = country.region;
+      const languages = country.languages;
+
+      const countryCard = document.createElement("div");
+      countryCard.className = "country-card";
+      countryCard.innerHTML = `
+          <div class="flag-container">
+              <img src="${flag}" alt="Drapeau de ${name}" class="country-flag" />
+          </div>
+          <div class="country-info">
+              <h2>${name}</h2>
+              <p><strong>Capitale:</strong> ${capital}</p>
+              <p><strong>Population:</strong> ${population} habitants</p>
+              <p><strong>Région:</strong> ${region}</p>
+          </div>
+      `;
+
+      countriesContainer.appendChild(countryCard);
+
+      // Ajout de l'événement mouseover pour le drapeau
+      const flagElement = countryCard.querySelector(".country-flag");
+      flagElement.addEventListener("mouseover", () => {
+          showPopup(flagElement, {
+              name,
+              languages,
+              population,
+              region,
+          });
+      });
+
+      flagElement.addEventListener("mouseout", () => {
+          hidePopup();
+      });
+  });
+}
+
+// Mode avancé : Modal (popup) pour info détaillé pays
 
 
 // ÉTAPE 7: Ajoutez un écouteur d'événement au curseur pour changer le nombre de pays affiché
@@ -174,3 +174,42 @@ btnAz.addEventListener("click", () => {
     selectValue = e.target.value;
     displayCountries();
   });
+
+  // mode dark
+function addDarkmodeWidget() {
+  new Darkmode().showWidget();
+}
+window.addEventListener("load", addDarkmodeWidget);
+  
+
+// Fonction pour afficher la popup
+function showPopup(element, countryInfo) {
+  const popup = document.createElement("div");
+  popup.className = "popup";
+
+  // Récupération des coordonnées du drapeau
+  const rect = element.getBoundingClientRect();
+
+  // Positionnement de la popup
+  popup.style.position = "absolute";
+  popup.style.top = `${rect.bottom + window.scrollY + 10}px`; // Sous le drapeau (+10px pour un petit espace)
+  popup.style.left = `${rect.left + window.scrollX}px`;
+
+  // Contenu de la popup
+  popup.innerHTML = `
+      <h3>${countryInfo.name}</h3>
+      <p><strong>Langue parlée :</strong> ${countryInfo.languages}</p>
+      <p><strong>Population:</strong> ${countryInfo.population}</p>
+      <p><strong>Région:</strong> ${countryInfo.region}</p>
+  `;
+
+  // Ajout de la popup au DOM
+  document.body.appendChild(popup);
+}
+// Fonction pour cacher la popup
+function hidePopup() {
+  const popup = document.querySelector(".popup");
+  if (popup) {
+      popup.remove();
+  }
+}
